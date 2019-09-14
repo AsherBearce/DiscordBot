@@ -1,5 +1,6 @@
 package main.java.io.github.asherbeace.bot;
 
+import main.java.io.github.asherbeace.bot.command.Command;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 public class TableBot {
     public static JDA jda;
     public static final String PREFIX = "!t";
+    public static final long TIME_COMMAND_REFRESH = 300000;
 
     public static void main(String[] args) throws LoginException {
         //Put token here
@@ -60,7 +62,9 @@ public class TableBot {
 
     public static class EventHandler extends ListenerAdapter{
         public void onGuildMessageReceived(GuildMessageReceivedEvent event){
-            parseCommand(event);
+            if (!event.getAuthor().getId().equalsIgnoreCase("135829757324558336")){
+                parseCommand(event);
+            }
         }
     }
 }
