@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.io.*;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -23,6 +24,7 @@ public class TableBot {
     public static final String PREFIX = "!t";
     public static final long TIME_COMMAND_REFRESH = 300000;
     public static final String FILE_NAME = "botToken.txt";
+    public static final List<User> DISALLOWED_USERS = new LinkedList<>();
     //TODO Add the ability to ban members from using the commands for a short time. Use a List<User> for this.
     //TODO Set up multi-stage commands.
 
@@ -108,7 +110,16 @@ public class TableBot {
 
     public static class EventHandler extends ListenerAdapter{
         public void onGuildMessageReceived(GuildMessageReceivedEvent event){
-            if (!event.getAuthor().getId().equalsIgnoreCase("135829757324558336")){
+            boolean canUse = true;
+
+            for (User user : DISALLOWED_USERS){
+                if (event.getMember().equals(user)){
+                    canUse = false;
+                    break;
+                }
+            }
+
+            if (canUse) {
                 parseCommand(event);
             }
         }

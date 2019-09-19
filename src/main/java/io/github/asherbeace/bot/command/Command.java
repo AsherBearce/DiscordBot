@@ -3,8 +3,11 @@ package main.java.io.github.asherbeace.bot.command;
 import main.java.io.github.asherbeace.bot.TableBot;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+
+import java.util.List;
 
 public enum Command {
     HELP( //Lists all commands and their descriptions
@@ -32,7 +35,36 @@ public enum Command {
                 channel.sendMessage(msg).queue();
             }, "A simple test command that repeats whatever the user has said.", true,
             CommandLevel.NORMAL, 50
-    );
+    ),
+    DISABLE(
+            (bot, channel, invoker, args) -> {
+                String user = args[0];
+                final int timeOut = Integer.parseInt(args[1]);
+                List<Member> members = channel.getGuild().getMembers();
+
+                for (Member member : members){
+                    if (member.getNickname().matches(user)){
+                        TableBot.DISALLOWED_USERS.add(member.getUser());
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(timeOut * 1000);
+                                if (TableBot.DISALLOWED_USERS.contains(member.getUser())) {
+                                    TableBot.DISALLOWED_USERS.remove(member.getUser());
+                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }).start();
+                    }
+                }
+
+                //Find all users whose name matches via regex
+            }, "Disables command usage for a user for a given time.", true,
+            CommandLevel.ADMIN, 100
+    ),
+    ENABLE((bot, channel, invoker, args) -> {
+        //TODO implement me
+    }, "Enables command usage for a user.", true, CommandLevel.ADMIN, 100);
 
     private int callCount = 0;
     private long lastCall;
