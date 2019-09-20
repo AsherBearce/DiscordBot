@@ -43,8 +43,9 @@ public enum Command {
                 List<Member> members = channel.getGuild().getMembers();
 
                 for (Member member : members){
-                    if (member.getNickname().matches(user)){
+                    if (member.getEffectiveName().contentEquals(user)){
                         TableBot.DISALLOWED_USERS.add(member.getUser());
+                        channel.sendMessage("Done!").queue();
                         new Thread(() -> {
                             try {
                                 Thread.sleep(timeOut * 1000);
@@ -63,7 +64,15 @@ public enum Command {
             CommandLevel.ADMIN, 100
     ),
     ENABLE((bot, channel, invoker, args) -> {
-        //TODO implement me
+        String user = args[0];
+        List<Member> members = channel.getGuild().getMembers();
+
+        for (Member member : members){
+            if (member.getEffectiveName().contentEquals(user)){
+                TableBot.DISALLOWED_USERS.remove(member.getUser());
+                channel.sendMessage("Done!").queue();
+            }
+        }
     }, "Enables command usage for a user.", true, CommandLevel.ADMIN, 100);
 
     private int callCount = 0;

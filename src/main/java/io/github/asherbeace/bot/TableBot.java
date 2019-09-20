@@ -113,7 +113,7 @@ public class TableBot {
             boolean canUse = true;
 
             for (User user : DISALLOWED_USERS){
-                if (event.getMember().equals(user)){
+                if (event.getMember().getUser().equals(user)){
                     canUse = false;
                     break;
                 }
