@@ -6,13 +6,12 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-
-import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
+import java.beans.XMLDecoder;
+import java.beans.XMLEncoder;
 import java.io.*;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -23,8 +22,9 @@ public class TableBot {
     public static JDA jda;
     public static final String PREFIX = "!t";
     public static final long TIME_COMMAND_REFRESH = 300000;
-    public static final String FILE_NAME = "botToken.txt";
+    public static final String FILE_NAME = "bot.xml";
     public static final List<User> DISALLOWED_USERS = new LinkedList<>();
+    private static BotSettings settings;
     //TODO Add the ability to ban members from using the commands for a short time. Use a List<User> for this.
     //TODO Set up multi-stage commands.
 
@@ -32,9 +32,10 @@ public class TableBot {
         File tokenFile = new File(FILE_NAME);
         if (tokenFile.exists()){
             try {
-                BufferedReader reader = new BufferedReader(new FileReader(tokenFile));
-                String token = reader.readLine();
-                jda = new JDABuilder(AccountType.BOT).setToken(token).build();
+                XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(FILE_NAME)));
+                settings = (BotSettings) decoder.readObject();
+
+                jda = new JDABuilder(AccountType.BOT).setToken(settings.getBotToken()).build();
             } catch (Exception e){
                 System.out.println("There was a problem retrieving your bots token! Performing first-time setup.");
                 firstTimeSetup();
@@ -60,16 +61,19 @@ public class TableBot {
                 jda = new JDABuilder(AccountType.BOT).setToken(s).build();
                 loginSuccess = true;
 
-                BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME));
-                writer.write(s);
+                settings = new BotSettings(s);
 
-                writer.close();
+                XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(FILE_NAME)));
+                encoder.writeObject(settings);
+                encoder.close();
             } catch (LoginException e) {
                 System.out.println("An error occurred while logging in. It may be that the token entered was invalid.");
             } catch (IOException e){
                 System.out.println("There was an error storing your bots token. Please retry.");
             }
         }
+
+
     }
 
     public static void parseCommand(GuildMessageReceivedEvent event){
@@ -127,6 +131,26 @@ public class TableBot {
         public void onGuildMemberLeave(GuildMemberLeaveEvent event){
             String name = event.getUser().getName();
             event.getGuild().getDefaultChannel().sendMessage("Oh no! " + name + " has left the server!").queue();
+        }
+    }
+
+    public static class BotSettings{
+        private String botToken;
+
+        public BotSettings(){
+
+        }
+
+        public BotSettings(String botToken){
+            this.botToken = botToken;
+        }
+
+        public String getBotToken() {
+            return botToken;
+        }
+
+        public void setBotToken(String botToken) {
+            this.botToken = botToken;
         }
     }
 }
