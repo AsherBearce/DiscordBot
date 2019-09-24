@@ -1,9 +1,12 @@
 package main.java.io.github.asherbeace.bot;
 
+import main.java.io.github.asherbeace.bot.botsettings.BotSettings;
+import main.java.io.github.asherbeace.bot.botsettings.ServerSettings;
 import main.java.io.github.asherbeace.bot.command.Command;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent;
@@ -34,8 +37,20 @@ public class TableBot {
             try {
                 XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(FILE_NAME)));
                 settings = (BotSettings) decoder.readObject();
-
                 jda = new JDABuilder(AccountType.BOT).setToken(settings.getBotToken()).build();
+
+                if (settings.getServers() == null){
+                    settings.setServers(new LinkedList<>());
+                    for (Guild server : jda.getGuilds()){
+                        ServerSettings guildSettings = new ServerSettings();
+                        guildSettings.setUp(server);
+                        settings.getServers().add(guildSettings);
+                    }
+
+                    XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(FILE_NAME)));
+                    encoder.writeObject(settings);
+                    encoder.close();
+                }
             } catch (Exception e){
                 System.out.println("There was a problem retrieving your bots token! Performing first-time setup.");
                 firstTimeSetup();
@@ -134,23 +149,5 @@ public class TableBot {
         }
     }
 
-    public static class BotSettings{
-        private String botToken;
 
-        public BotSettings(){
-
-        }
-
-        public BotSettings(String botToken){
-            this.botToken = botToken;
-        }
-
-        public String getBotToken() {
-            return botToken;
-        }
-
-        public void setBotToken(String botToken) {
-            this.botToken = botToken;
-        }
-    }
 }
