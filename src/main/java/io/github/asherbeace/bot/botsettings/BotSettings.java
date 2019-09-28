@@ -29,4 +29,14 @@ public class BotSettings{
     public void setServers(List<ServerSettings> servers) {
         this.servers = servers;
     }
+
+    public ServerSettings getServer(String serverName){
+        for (ServerSettings setting : servers){
+            if (setting.getName().contentEquals(serverName)){
+                return setting;
+            }
+        }
+
+        return null;
+    }
 }

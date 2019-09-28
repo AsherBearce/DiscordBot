@@ -4,14 +4,17 @@ import main.java.io.github.asherbeace.bot.TableBot;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.internal.requests.Route;
 
+import java.io.IOException;
 import java.util.List;
 
 public enum Command {
     HELP( //Lists all commands and their descriptions
-            (bot, channel, invoker, args) -> {
+            (bot, channel, invoker, msg, args) -> {
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setTitle("Command list");
 
@@ -25,11 +28,11 @@ public enum Command {
             1
     ),
     SAY( //Test command. Just repeats back whatever was said to it after the command.
-            (bot, channel, invoker, args) -> {
-                String msg = "";
+            (bot, channel, invoker, msg, args) -> {
+                String msgBack = "";
 
                 for (int i = 0; i < args.length; i++){
-                    msg += args[i] + " ";
+                    msgBack += args[i] + " ";
                 }
 
                 channel.sendMessage(msg).queue();
@@ -37,7 +40,7 @@ public enum Command {
             CommandLevel.NORMAL, 50
     ),
     DISABLE(
-            (bot, channel, invoker, args) -> {
+            (bot, channel, invoker, msg, args) -> {
                 String user = args[0];
                 final int timeOut = Integer.parseInt(args[1]);
                 List<Member> members = channel.getGuild().getMembers();
@@ -45,7 +48,7 @@ public enum Command {
                 for (Member member : members){
                     if (member.getEffectiveName().contentEquals(user)){
                         TableBot.DISALLOWED_USERS.add(member.getUser());
-                        channel.sendMessage("Done!").queue();
+                        msg.addReaction(":thumbsup::skin-tone-3: ").queue();
                         new Thread(() -> {
                             try {
                                 Thread.sleep(timeOut * 1000);
@@ -63,17 +66,49 @@ public enum Command {
             }, "Disables command usage for a user for a given time.", true,
             CommandLevel.ADMIN, 100
     ),
-    ENABLE((bot, channel, invoker, args) -> {
+    ENABLE((bot, channel, invoker, msg, args) -> {
         String user = args[0];
         List<Member> members = channel.getGuild().getMembers();
 
         for (Member member : members){
             if (member.getEffectiveName().contentEquals(user)){
                 TableBot.DISALLOWED_USERS.remove(member.getUser());
-                channel.sendMessage("Done!").queue();
+                msg.addReaction(":thumbsup::skin-tone-3: ").queue();
             }
         }
-    }, "Enables command usage for a user.", true, CommandLevel.ADMIN, 100);
+    }, "Enables command usage for a user.", true, CommandLevel.ADMIN, 100),
+    GIVECOMMAND((bot, channel, invoker, msg, args) -> {
+        String roleName = args[0];
+        String commandName = args[1];
+        String serverName = channel.getGuild().getName();
+
+        TableBot.addCommandToRole(roleName, commandName, serverName);
+
+        new Thread(() -> {
+            try {
+                TableBot.writeSettings();
+            }
+            catch (IOException e){
+                System.out.println("OOPS!");
+            }
+        }).start();
+    }, "Adds a command permission to a given role.", true, CommandLevel.ADMIN, 100),
+    TAKECOMMAND((bot, channel, invoker, msg, args) -> {
+        String roleName = args[0];
+        String commandName = args[1];
+        String serverName = channel.getGuild().getName();
+
+        TableBot.removeCommandFromRole(roleName, commandName, serverName);
+
+        new Thread(() -> {
+            try {
+                TableBot.writeSettings();
+            }
+            catch (IOException e){
+                System.out.println("OOPS!");
+            }
+        }).start();
+    }, "Takes a command permission away from a given role.", true, CommandLevel.ADMIN, 100);
 
     private int callCount = 0;
     private long lastCall;
@@ -92,12 +127,12 @@ public enum Command {
         this.callLimit = executeLimit;
     }
 
-    public void execute(JDA bot, TextChannel channel, User invoker, String[] args){
+    public void execute(JDA bot, TextChannel channel, User invoker, Message msg, String[] args){
         if (System.currentTimeMillis() - lastCall >= TableBot.TIME_COMMAND_REFRESH || callCount < callLimit){
             if (callCount >= callLimit){
                 callCount = 0;
             }
-            executor.execute(bot, channel, invoker, args);
+            executor.execute(bot, channel, invoker, msg, args);
             lastCall = System.currentTimeMillis();
             callCount++;
         } else {

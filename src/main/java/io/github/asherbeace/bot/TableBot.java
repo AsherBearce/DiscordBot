@@ -7,11 +7,14 @@ import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.internal.requests.Route;
+
 import javax.security.auth.login.LoginException;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
@@ -28,16 +31,16 @@ public class TableBot {
     public static final String FILE_NAME = "bot.xml";
     public static final List<User> DISALLOWED_USERS = new LinkedList<>();
     private static BotSettings settings;
-    //TODO Add the ability to ban members from using the commands for a short time. Use a List<User> for this.
-    //TODO Set up multi-stage commands.
+    //TODO fix bug involving the bot not writing all the server settings correctly.
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws InterruptedException{
         File tokenFile = new File(FILE_NAME);
         if (tokenFile.exists()){
             try {
                 XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(FILE_NAME)));
                 settings = (BotSettings) decoder.readObject();
                 jda = new JDABuilder(AccountType.BOT).setToken(settings.getBotToken()).build();
+                Thread.sleep(1000);
 
                 if (settings.getServers() == null){
                     settings.setServers(new LinkedList<>());
@@ -56,11 +59,28 @@ public class TableBot {
                 firstTimeSetup();
             }
         } else {
+            Thread.sleep(1000);
             firstTimeSetup();
         }
 
         jda.addEventListener(new EventHandler());
 
+    }
+
+    public static void addCommandToRole(String role, String command, String serverName){
+        ServerSettings server = settings.getServer(serverName);
+        server.addCommand(role, command);
+    }
+
+    public static void removeCommandFromRole(String role, String command, String serverName){
+        ServerSettings server = settings.getServer(serverName);
+        server.removeCommand(role, command);
+    }
+
+    public static void writeSettings() throws IOException{
+        XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(FILE_NAME)));
+        encoder.writeObject(settings);
+        encoder.close();
     }
 
     private static void firstTimeSetup(){
@@ -77,6 +97,13 @@ public class TableBot {
                 loginSuccess = true;
 
                 settings = new BotSettings(s);
+                settings.setServers(new LinkedList<>());
+
+                for (Guild server : jda.getGuilds()){
+                    ServerSettings guildSettings = new ServerSettings();
+                    guildSettings.setUp(server);
+                    settings.getServers().add(guildSettings);
+                }
 
                 XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(FILE_NAME)));
                 encoder.writeObject(settings);
@@ -107,6 +134,9 @@ public class TableBot {
                 }
             }
 
+            List<Role> roles = event.getMember().getRoles();
+            ServerSettings serverSettings = settings.getServer(event.getGuild().getName());
+
             if (command != null){
                 String[] commandArgs = {};
 
@@ -114,7 +144,17 @@ public class TableBot {
                     commandArgs = Arrays.copyOfRange(args, 2, args.length);
                 }
 
-                command.execute(jda, event.getChannel(), event.getAuthor(), commandArgs);
+                if (serverSettings.getRoleCommands().get("@everyone").contains(command.name()) || event.getMember().isOwner()){
+                    command.execute(jda, event.getChannel(), event.getAuthor(), event.getMessage(), commandArgs);
+                } else {
+                    for (Role role : roles) {
+                        System.out.println(role.getName());
+                        if (serverSettings.getRoleCommands().get(role.getName()).contains(command.name())) {
+                            command.execute(jda, event.getChannel(), event.getAuthor(), event.getMessage(), commandArgs);
+                            break;
+                        }
+                    }
+                }
             }
             else {
                 sendErrorMessage(event.getChannel(), "Unknown command, try typing \"!t help\" for a list of commands.");

@@ -12,58 +12,54 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ServerSettings {
-    private HashMap<Role, List<Command>> roleCommands;
-    private Member serverOwner;
-    private Guild thisServer;
+    private HashMap<String, List<String>> roleCommands;
+    private String name;
 
     public ServerSettings(){
         roleCommands = new HashMap<>();
     }
 
-    public HashMap<Role, List<Command>> getRoleCommands() {
+    public HashMap<String, List<String>> getRoleCommands() {
         return roleCommands;
     }
 
-    public Member getServerOwner() {
-        return serverOwner;
+    public void setRoleCommands(HashMap<String, List<String>> commands){
+        roleCommands = commands;
     }
 
-    public void setServerOwner(Member serverOwner) {
-        this.serverOwner = serverOwner;
-    }
-
-    public Guild getThisServer() {
-        return thisServer;
-    }
-
-    public void setThisServer(Guild thisServer) {
-        this.thisServer = thisServer;
-    }
-
-    public void addCommand(Role role, Command command){
+    public void addCommand(String role, String command){
         roleCommands.get(role).add(command);
     }
 
-    public void removeCommand(Role role, Command command){
+    public void removeCommand(String role, String command){
         roleCommands.get(role).remove(command);
     }
 
+    public String getName(){
+        return name;
+    }
+
+    public void setName(String name){
+        this.name = name;
+    }
+
     public void setUp(Guild server){
+        name = server.getName();
         for (Role role : server.getRoles()){
-            LinkedList<Command> defaultCommands = new LinkedList<>();
+            LinkedList<String> defaultCommands = new LinkedList<>();
 
             for (Command command : Command.values()) {
 
                 if (role.getPermissions().contains(Permission.ADMINISTRATOR)) {
-                    defaultCommands.add(command);
+                    defaultCommands.add(command.name());
                 } else {
                     if (command.authLevel == CommandLevel.NORMAL){
-                        defaultCommands.add(command);
+                        defaultCommands.add(command.name());
                     }
                 }
             }
 
-            roleCommands.put(role, defaultCommands);
+            roleCommands.put(role.getName(), defaultCommands);
         }
     }
 }
