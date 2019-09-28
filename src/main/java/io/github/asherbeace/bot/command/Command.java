@@ -29,13 +29,9 @@ public enum Command {
     ),
     SAY( //Test command. Just repeats back whatever was said to it after the command.
             (bot, channel, invoker, msg, args) -> {
-                String msgBack = "";
+                String msgBack = args[0];
 
-                for (int i = 0; i < args.length; i++){
-                    msgBack += args[i] + " ";
-                }
-
-                channel.sendMessage(msg).queue();
+                channel.sendMessage(msgBack).queue();
             }, "A simple test command that repeats whatever the user has said.", true,
             CommandLevel.NORMAL, 50
     ),

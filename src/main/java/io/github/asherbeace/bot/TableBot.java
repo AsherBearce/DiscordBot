@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TableBot {
     public static JDA jda;
@@ -119,7 +121,15 @@ public class TableBot {
     }
 
     public static void parseCommand(GuildMessageReceivedEvent event){
-        String[] args = event.getMessage().getContentRaw().split(" ");
+        String raw = event.getMessage().getContentRaw();
+        List<String> allMatches = new LinkedList<>();
+        Matcher m = Pattern.compile("\".*\"|\\S+").matcher(raw);
+
+        while (m.find()){
+            allMatches.add(m.group().replaceAll("\"", ""));
+        }
+
+        String[] args = allMatches.toArray(new String[]{});
 
         if (args.length < 2){
             return;
