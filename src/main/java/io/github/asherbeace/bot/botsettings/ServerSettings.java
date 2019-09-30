@@ -1,7 +1,7 @@
-package main.java.io.github.asherbeace.bot.botsettings;
+package io.github.asherbeace.bot.botsettings;
 
-import main.java.io.github.asherbeace.bot.command.Command;
-import main.java.io.github.asherbeace.bot.command.CommandLevel;
+import io.github.asherbeace.bot.command.Command;
+import io.github.asherbeace.bot.command.CommandLevel;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -16,7 +16,7 @@ public class ServerSettings {
     private String name;
 
     public ServerSettings(){
-        roleCommands = new HashMap<>();
+        roleCommands = new HashMap<String, List<String>>();
     }
 
     public HashMap<String, List<String>> getRoleCommands() {
@@ -46,7 +46,7 @@ public class ServerSettings {
     public void setUp(Guild server){
         name = server.getName();
         for (Role role : server.getRoles()){
-            LinkedList<String> defaultCommands = new LinkedList<>();
+            LinkedList<String> defaultCommands = new LinkedList<String>();
 
             for (Command command : Command.values()) {
 

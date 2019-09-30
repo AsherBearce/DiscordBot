@@ -1,4 +1,4 @@
-package main.java.io.github.asherbeace.bot.command;
+package io.github.asherbeace.bot.command;
 
 public enum CommandLevel {
     NORMAL,

@@ -1,8 +1,8 @@
-package main.java.io.github.asherbeace.bot;
+package io.github.asherbeace.bot;
 
-import main.java.io.github.asherbeace.bot.botsettings.BotSettings;
-import main.java.io.github.asherbeace.bot.botsettings.ServerSettings;
-import main.java.io.github.asherbeace.bot.command.Command;
+import io.github.asherbeace.bot.botsettings.BotSettings;
+import io.github.asherbeace.bot.botsettings.ServerSettings;
+import io.github.asherbeace.bot.command.Command;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;

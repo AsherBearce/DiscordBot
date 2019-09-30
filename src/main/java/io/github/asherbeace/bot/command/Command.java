@@ -1,13 +1,12 @@
-package main.java.io.github.asherbeace.bot.command;
+package io.github.asherbeace.bot.command;
 
-import main.java.io.github.asherbeace.bot.TableBot;
+import io.github.asherbeace.bot.TableBot;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.internal.requests.Route;
 
 import java.io.IOException;
 import java.util.List;

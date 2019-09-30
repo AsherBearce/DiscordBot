@@ -1,4 +1,4 @@
-package main.java.io.github.asherbeace.bot.command;
+package io.github.asherbeace.bot.command;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;

@@ -1,4 +1,4 @@
-package main.java.io.github.asherbeace.bot.botsettings;
+package io.github.asherbeace.bot.botsettings;
 
 import java.util.List;
 
