@@ -3,10 +3,9 @@ package io.github.asherbeace.bot.command;
 import io.github.asherbeace.bot.TableBot;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.managers.AudioManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,7 +42,7 @@ public enum Command {
                 for (Member member : members){
                     if (member.getEffectiveName().contentEquals(user)){
                         TableBot.DISALLOWED_USERS.add(member.getUser());
-                        msg.addReaction(":thumbsup::skin-tone-3: ").queue();
+                        msg.addReaction("✔").queue();
                         new Thread(() -> {
                             try {
                                 Thread.sleep(timeOut * 1000);
@@ -68,7 +67,7 @@ public enum Command {
         for (Member member : members){
             if (member.getEffectiveName().contentEquals(user)){
                 TableBot.DISALLOWED_USERS.remove(member.getUser());
-                msg.addReaction(":thumbsup::skin-tone-3: ").queue();
+                msg.addReaction("✔").queue();
             }
         }
     }, "Enables command usage for a user.", true, CommandLevel.ADMIN, 100),
@@ -78,6 +77,7 @@ public enum Command {
         String serverName = channel.getGuild().getName();
 
         TableBot.addCommandToRole(roleName, commandName, serverName);
+        msg.addReaction("✔").queue();
 
         new Thread(() -> {
             try {
@@ -103,7 +103,52 @@ public enum Command {
                 System.out.println("OOPS!");
             }
         }).start();
-    }, "Takes a command permission away from a given role.", true, CommandLevel.ADMIN, 100);
+    }, "Takes a command permission away from a given role.", true, CommandLevel.ADMIN, 100),
+    JOIN((bot, channel, invoker, msg, args) -> {
+        AudioManager audioManager = channel.getGuild().getAudioManager();
+
+        if (audioManager.isConnected()){
+            channel.sendMessage("I'm already connected!").queue();
+            return;
+        }
+
+        GuildVoiceState memberState = channel.getGuild().getMember(invoker).getVoiceState();
+
+        if (!memberState.inVoiceChannel()){
+            channel.sendMessage("Please join a voice channel first.").queue();
+            return;
+        }
+
+        VoiceChannel vc = memberState.getChannel();
+        Member self = channel.getGuild().getSelfMember();
+
+        if (!self.hasPermission(vc, Permission.VOICE_CONNECT)){
+            channel.sendMessage("I am missing a permission to join your voice channel!").queue();
+            return;
+        }
+
+        audioManager.openAudioConnection(vc);
+        msg.addReaction("✔").queue();
+
+    }, "Joins the bot to whatever voice chat channel the invoker is in.", false, CommandLevel.NORMAL, 100),
+    LEAVE((bot, channel, invoker, msg, args) -> {
+        AudioManager audioManager = channel.getGuild().getAudioManager();
+
+        if (!audioManager.isConnected()){
+            channel.sendMessage("I'm not connected to a voice channel!").queue();
+            return;
+        }
+
+        VoiceChannel vc = audioManager.getConnectedChannel();
+
+        if (!vc.getMembers().contains(channel.getGuild().getMember(invoker))){
+            channel.sendMessage("You have to be in the same voice channel to use this!").queue();
+            return;
+        }
+
+        audioManager.closeAudioConnection();
+        msg.addReaction("✔").queue();
+    }, "Leaves whatever voice chat it is currently in.", false, CommandLevel.NORMAL, 100);
 
     private int callCount = 0;
     private long lastCall;
