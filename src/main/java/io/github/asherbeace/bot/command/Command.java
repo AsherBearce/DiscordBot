@@ -1,6 +1,7 @@
 package io.github.asherbeace.bot.command;
 
 import io.github.asherbeace.bot.TableBot;
+import io.github.asherbeace.bot.audio.PlayerManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -148,7 +149,32 @@ public enum Command {
 
         audioManager.closeAudioConnection();
         msg.addReaction("✔").queue();
-    }, "Leaves whatever voice chat it is currently in.", false, CommandLevel.NORMAL, 100);
+    }, "Leaves whatever voice chat it is currently in.", false, CommandLevel.NORMAL, 100),
+    PLAY((bot, channel, invoker, msg, args) -> {
+        //TODO add safety so no one can play a track without being in the voice chat.
+        PlayerManager manager = PlayerManager.getInstance();
+        manager.loadAndPlay(channel, args[0]);
+    }, "Plays a song given a URL.", true, CommandLevel.NORMAL, 100),
+    SKIP((bot, channel, invoker, msg, args) -> {
+        PlayerManager manager = PlayerManager.getInstance();
+        manager.skip(channel.getGuild());
+        msg.addReaction("✔").queue();
+    }, "Skips the current song.", false, CommandLevel.NORMAL, 100),
+    VOLUME((bot, channel, invoker, msg, args) -> {
+        PlayerManager manager = PlayerManager.getInstance();
+        manager.setVolume(channel.getGuild(), Integer.parseInt(args[0]));
+        msg.addReaction("✔").queue();
+    }, "Sets the volume of the music.", true, CommandLevel.NORMAL, 100),
+    PAUSE((bot, channel, invoker, msg, args) -> {
+        PlayerManager manager = PlayerManager.getInstance();
+        manager.pause(channel.getGuild());
+        msg.addReaction("✔").queue();
+    }, "Pauses the current song.", false, CommandLevel.NORMAL, 100),
+    UNPAUSE((bot, channel, invoker, msg, args) -> {
+        PlayerManager manager = PlayerManager.getInstance();
+        manager.unpause(channel.getGuild());
+        msg.addReaction("✔").queue();
+    }, "Unpauses the current song.", false, CommandLevel.NORMAL, 100);
 
     private int callCount = 0;
     private long lastCall;
